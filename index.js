@@ -6,13 +6,19 @@ var applySourceMap = require('vinyl-sourcemaps-apply');
 var objectAssign = require('object-assign');
 var replaceExt = require('replace-ext');
 var babel = require('babel-core');
+var lru = require('lru-cache');
+var crypto = require('crypto');
 
 function replaceExtension(fp) {
 	return path.extname(fp) ? replaceExt(fp, '.js') : fp;
 }
 
-module.exports = function (opts) {
+module.exports = function (opts, lruOptions) {
 	opts = opts || {};
+
+	lruOptions = lruOptions || 500;
+
+	var cache = lru(lruOptions);
 
 	return through.obj(function (file, enc, cb) {
 		if (file.isNull()) {
@@ -34,7 +40,17 @@ module.exports = function (opts) {
 				sourceMapTarget: file.relative
 			});
 
-			var res = babel.transform(file.contents.toString(), fileOpts);
+			var resultHash = crypto.createHash('sha1').update(file.contents.toString()).digest('hex');
+
+			var res;
+
+			res = cache.get(resultHash);
+
+			if (!res) {
+				res = babel.transform(file.contents.toString(), fileOpts);
+
+				cache.set(resultHash, res);
+			}
 
 			if (file.sourceMap && res.map) {
 				res.map.file = replaceExtension(res.map.file);

@@ -30,12 +30,15 @@ gulp.task('default', () =>
 
 ## API
 
-### babel([options])
+### babel([babelOptions][, lruCacheOptions = 500])
 
-#### options
+#### babelOptions
 
 See the Babel [options](https://babeljs.io/docs/usage/options/), except for `sourceMap` and `filename` which is handled for you.
 
+#### lruCacheOptions
+
+See [`lru-cache` options](https://github.com/isaacs/node-lru-cache#options).
 
 ## Source Maps
 
@@ -58,7 +61,6 @@ gulp.task('default', () =>
 		.pipe(gulp.dest('dist'))
 );
 ```
-
 
 ## Babel Metadata
 
